@@ -1,0 +1,14 @@
+{
+    "bybitApiKey": "3cjV4jEi9Iq5QZa8fU",
+    "bybitApiSecret": "VbrCZlQIUllY350K1L8QwWn6rioQMU5rP60H",
+    "Paystacksecretkey": "f3559c49137754d9e8c6f73e65e0263c4cc07089",
+    "runIntervalMinutes": 1,
+    "lastRunTime": "2025-06-13T10:30:44.241924",
+    "email_alerts_enabled": true,
+    "email_username": "YOUR_...",
+    "email_password": "...",
+    "alert_recipient_email": "YOUR_...",
+    "session_token": "4c98459b-763f-43f8-8e02-56c15ec6e6c2",
+    "token_expiry": "2025-06-14T10:21:46.302514",
+    "paystackSecretKey": "f3559c49137754d9e8c6f73e65e0263c4cc07089"
+}
