@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Card from '../components/card'; // Use the new Card component
+import Card from '../components/card'; // Note the lowercase 'c' for 'card'
 
 const Settings = () => {
   const [config, setConfig] = useState({
