@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Card from './components/Card'; // Use the new Card component
+import Card from './components/card'; // Use the new Card component
 
 const Logs = () => {
   const [logMessages, setLogMessages] = useState([]);
@@ -17,7 +17,7 @@ const Logs = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/logs', {
+      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
