@@ -1,0 +1,6 @@
+Flask
+Flask-Cors
+python-dotenv
+requests
+gunicorn
+Werkzeug==2.3.8
