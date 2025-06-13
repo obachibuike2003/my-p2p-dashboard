@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Card from '../components/card'; // Notice the '../' at the beginning
+import Card from './components/card'; // Use the new Card component
 const Clients = () => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
