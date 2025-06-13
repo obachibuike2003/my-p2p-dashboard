@@ -1,0 +1,366 @@
+/* src/index.css */
+
+/* Global styles for the entire app container */
+html, body, #root, .app-container {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh; /* Ensures the app takes at least the full viewport height */
+    font-family: 'Inter', sans-serif; /* Use Inter font */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    background-color: #f0f2f5; /* Lighter, subtle background for the whole app */
+    display: flex; /* Use flex to control overall app layout */
+    flex-direction: column; /* Stack header and main content vertically */
+    overflow-x: hidden; /* Prevent horizontal scrolling at the root level */
+}
+
+/* Ensure all elements inherit box-sizing */
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Navbar styles (the vibrant blue background area) */
+.navbar {
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); /* Gradient for depth */
+    color: white;
+    padding: 1rem 2rem; /* Responsive padding */
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap onto the next line if space is limited */
+    justify-content: space-between;
+    align-items: center;
+    border-bottom-left-radius: 12px; /* More pronounced rounded corners */
+    border-bottom-right-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow for floating effect */
+    min-height: 70px; /* Slightly taller for presence */
+    width: 100%;
+    position: sticky; /* Keep navbar visible on scroll if content gets long */
+    top: 0;
+    z-index: 1000; /* Ensure it stays on top */
+}
+
+.navbar-brand {
+    font-size: 1.8rem; /* Larger font for brand */
+    font-weight: 700; /* Bolder */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2); /* Subtle text shadow */
+    padding-right: 1.5rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.navbar-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; /* More space between nav items */
+    justify-content: flex-end;
+    flex-grow: 1;
+}
+
+.nav-item {
+    margin: 0;
+}
+
+.nav-link {
+    background: rgba(255, 255, 255, 0.1); /* Subtle transparent background */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
+    color: white;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem; /* Larger padding for better touch targets */
+    border-radius: 8px; /* Nicer rounded buttons */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle button shadow */
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.3); /* More pronounced hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Lift effect on hover */
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.4);
+    font-weight: 700;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3); /* Inset shadow for active */
+}
+
+.logout-btn {
+    background-color: #e74c3c; /* Red color for logout */
+    border-color: #e74c3c; /* Match border color */
+}
+
+.logout-btn:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+
+/* Main content area (the white section where pages render) */
+.main-content {
+    flex-grow: 1;
+    padding: 2.5rem; /* Increased general padding */
+    background-color: #ffffff;
+    margin: 1.5rem; /* Larger margin for more floating effect */
+    border-radius: 12px; /* More pronounced rounded corners */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Stronger shadow */
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 70px - 3rem); /* Adjust min-height based on navbar height and margin */
+}
+
+/* Loading spinner styles */
+.loading-spinner {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.3rem;
+    color: #666;
+    animation: pulse 1.5s infinite ease-in-out; /* Simple pulse animation */
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+
+/* --- General Form Elements Styling (Apply to all components with forms) --- */
+.form-section {
+    padding: 1.5rem; /* Larger padding */
+    border-radius: 10px; /* Nicer rounded corners */
+    background-color: #fbfbfb; /* Slightly off-white for sections */
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), inset 0 0 5px rgba(0,0,0,0.02);
+}
+
+.form-group {
+    margin-bottom: 1.25rem; /* More vertical spacing */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-weight: 600; /* Bolder labels */
+    color: #444;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group input[type="email"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.85rem; /* Slightly larger padding */
+    border: 1px solid #d0d0d0; /* Softer border */
+    border-radius: 8px; /* More rounded */
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: #fff;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="email"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #4A90E2;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3); /* More visible focus ring */
+}
+
+.btn {
+    background-color: #4A90E2;
+    color: white;
+    padding: 0.85rem 1.8rem; /* Larger padding */
+    border: none;
+    border-radius: 8px; /* More rounded */
+    cursor: pointer;
+    font-size: 1.05rem; /* Slightly larger font */
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Nicer shadow */
+}
+
+.btn:hover {
+    background-color: #357ABD;
+    transform: translateY(-2px); /* Lift effect */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25); /* More pronounced shadow */
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.25);
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    box-shadow: 0 6px 12px rgba(192, 57, 43, 0.35);
+}
+
+.btn-success {
+    background-color: #27ae60;
+    box-shadow: 0 4px 8px rgba(39, 174, 96, 0.25);
+}
+
+.btn-success:hover {
+    background-color: #229954;
+    box-shadow: 0 6px 12px rgba(34, 153, 84, 0.35);
+}
+
+/* --- General Table Styling (Apply to all components with tables) --- */
+.responsive-table-container {
+    overflow-x: auto;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border-radius: 10px; /* Rounded container */
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px; /* Slightly wider min-width for tables */
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid #f5f5f5; /* Very light internal borders */
+    padding: 1rem 1.2rem; /* More padding */
+    text-align: left;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+.data-table th {
+    background-color: #f8fafd; /* Lighter header background */
+    font-weight: 700; /* Bolder headers */
+    color: #222;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    text-transform: uppercase; /* Uppercase headers */
+    letter-spacing: 0.05em;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #fcfdfe; /* Subtle zebra striping */
+}
+
+.data-table tbody tr:hover {
+    background-color: #e8f3ff; /* More noticeable hover */
+    cursor: pointer;
+}
+
+/* --- Specific Log Viewer Styling (for Logs.jsx and Dashboard.jsx's log display) --- */
+.log-viewer {
+    background-color: #282c34; /* Dark background for console look */
+    color: #abb2bf; /* Light text color */
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace; /* Monospace font for logs */
+    font-size: 0.9em;
+    padding: 1rem;
+    border-radius: 8px;
+    max-height: 400px; /* Fixed height for log area */
+    overflow-y: auto; /* Scrollable vertically */
+    border: 1px solid #3c4048; /* Darker border */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); /* Inset shadow for depth */
+    white-space: pre-wrap; /* Preserve whitespace and wrap long lines */
+    word-break: break-word; /* Break long words if necessary */
+}
+
+.log-entry {
+    margin-bottom: 0.2rem;
+    line-height: 1.3;
+    padding: 0.1rem 0;
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.05); /* Subtle separator */
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+/* Specific styling for error/warning logs if you were to add them */
+.log-entry.error {
+    color: #e06c75; /* Reddish for errors */
+    font-weight: bold;
+}
+.log-entry.warning {
+    color: #e5c07b; /* Yellowish for warnings */
+}
+.log-entry.info {
+    color: #98c379; /* Greenish for info */
+}
+
+
+/* Media Queries for True Responsiveness */
+
+/* Small screens (e.g., phones) */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.75rem 1rem;
+        min-height: auto; /* Allow height to adjust */
+    }
+
+    .navbar-brand {
+        margin-bottom: 0.75rem;
+        font-size: 1.3rem;
+    }
+
+    .navbar-nav {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .nav-item {
+        width: 100%;
+    }
+
+    .nav-link {
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem 1rem;
+    }
+
+    .main-content {
+        padding: 1.5rem; /* Reduced padding on small screens */
+        margin: 0.75rem;
+        min-height: calc(100vh - 70px - 1.5rem); /* Adjust min-height for smaller screens */
+    }
+
+    .form-section {
+        padding: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .data-table {
+        min-width: 100%; /* Allows horizontal scroll in container, but doesn't force a minimum */
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 0.8rem;
+    }
+}
+
+
+/* Add Inter font from Google Fonts (ensure this is at the end of the file or in its own import) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Optional: Fira Code or other monospace for logs */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
