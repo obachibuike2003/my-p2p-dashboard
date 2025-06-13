@@ -1,24 +1,25 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Node.js and Frontend
+node_modules/
+build/
+dist/
+.env.local
+.env
+tmp/ # Temporary files
+*.log # General log files
 
-node_modules
-dist
-dist-ssr
-*.local
+# Python and Backend
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.flaskenv
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# IDE / OS generated files
+.vscode/
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+
+# Other common ignores
+*.swp # Vim swap files
+*.bak # Backup files
+*.swo # Vim swap files
