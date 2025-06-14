@@ -13,7 +13,7 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
