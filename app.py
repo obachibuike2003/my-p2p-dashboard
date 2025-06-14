@@ -159,6 +159,70 @@ if not backend_users and main_users:
 app = Flask(__name__)
 CORS(app) 
 
+import os # Make sure this is at the very top of app.py
+from werkzeug.security import check_password_hash # Make sure this is at the very top of app.py
+from flask import Flask, request, jsonify # Make sure this is at the very top
+from flask_cors import CORS # Make sure this is at the very top
+
+# ... (other imports and code above) ...
+
+# Assuming 'app' is defined like this somewhere below the imports:
+# app = Flask(__name__)
+# CORS(app)
+
+# ... (more of your existing code) ...
+
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    # --- START OF DEBUG PRINTS ---
+    print("--- Login attempt received ---")
+    # --- END OF DEBUG PRINTS ---
+
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    # --- START OF DEBUG PRINTS ---
+    print(f"Attempting login for username: {username}")
+    # --- END OF DEBUG PRINTS ---
+
+    # Retrieve the hashed password from environment variable
+    admin_password_hash = os.getenv('ADMIN_PASSWORD_HASH')
+
+    # --- START OF DEBUG PRINTS ---
+    print(f"Retrieved ADMIN_PASSWORD_HASH (from env): {admin_password_hash}")
+    # Only print first few characters of provided password for security, NEVER the full password
+    print(f"Password provided (first 5 chars): {password[:5]}...")
+    # --- END OF DEBUG PRINTS ---
+
+    # Retrieve admin username (assuming 'admin' is the default if not set in env)
+    admin_username_env = os.getenv('ADMIN_USERNAME', 'admin')
+
+    if admin_password_hash is None:
+        # --- START OF DEBUG PRINTS ---
+        print("ERROR: ADMIN_PASSWORD_HASH environment variable is NOT set in backend!")
+        # --- END OF DEBUG PRINTS ---
+        return jsonify({"message": "Server configuration error: Admin password hash missing."}), 500
+
+    # Perform the password check
+    if username == admin_username_env and check_password_hash(admin_password_hash, password):
+        # --- START OF DEBUG PRINTS ---
+        print("Login successful for admin!")
+        # --- END OF DEBUG PRINTS ---
+        # Generate token and return success
+        # Example (replace with your actual token generation logic):
+        session_token = str(uuid.uuid4())
+        token_expiry = datetime.now() + timedelta(hours=8)
+        # Store session_token and token_expiry in config.json or a database if you need persistence
+        # For simplicity here, just returning a placeholder
+        return jsonify({"message": "Login successful", "token": session_token, "tokenExpiry": token_expiry.isoformat()}), 200
+    else:
+        # --- START OF DEBUG PRINTS ---
+        print("Login failed: Invalid username or password (comparison failed).")
+        # --- END OF DEBUG PRINTS ---
+        return jsonify({"message": "Invalid username or password"}), 401
+
 
 # --- Bank Name to Bank Code Mapping ---
 NIGERIAN_BANK_CODES = {
