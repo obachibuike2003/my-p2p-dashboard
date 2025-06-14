@@ -240,7 +240,8 @@ if not backend_users and 'main_users' in locals() and main_users: # Check if mai
 # These variables are read from Render's Environment settings (or your local .env file)
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 # This uses the hardcoded hash you provided as a fallback if not set in environment variables
-ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', "scrypt:32768:8:1$xlvsrD5vmfOHKS8N$46ba42001b5a3ee724f21a54257de34cbbf330e750bc31d424f3da5d98cf121f36427dc0f73c818b2b6ca2f15170733a307c54a21af8428daf09f3fac5b4c1b0")
+# This is the exact hash for 'MULLER2003' generated with pbkdf2:sha256
+ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', "pbkdf2:sha256:1000000$fXxxEW7oKwpbvD0g$a08acb1c3662571cd0ba539f5ec14e75c7d53de71afc835fce7aeef6654ebe74")
 print(f"DEBUG: ADMIN_PASSWORD_HASH loaded: {ADMIN_PASSWORD_HASH[:15]}...") # Print first few chars for security in logs
 
 if ADMIN_PASSWORD_HASH is None or ADMIN_PASSWORD_HASH == "":
@@ -565,6 +566,7 @@ def run_bot_in_background():
                                     order["status"] = f"Failed to Get Seller Info via API, Manual Payment Needed (Reason: {error_msg[:50]}...)"
                                     break
                             save_json_data(ORDERS_FILE, backend_orders)
+                # Removed erroneous 'else:' that was not paired with any 'if' or loop
                 error_reason = f"Failed to place P2P order for {selected_offer.get('nickName')}. Reason: {error_msg or 'Unknown issue'}. See placeorder.py logs for details."
                 root_logger.error(f"❌ {error_reason}")
                 root_logger.warning(f"No order placed. Check Bybit API key permissions and your balance.")
