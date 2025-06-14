@@ -21,7 +21,7 @@ const App = () => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const response = await fetch('http://localhost:5000/api/status', {
+        const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

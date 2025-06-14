@@ -17,7 +17,7 @@ const Orders = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/orders', {
+      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
