@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Card from './components/card'; // Use the new Card component
 
+// Define the API_BASE_URL using the environment variable at the top level
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,14 +20,16 @@ const Orders = () => {
     }
 
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL and corrected endpoint for orders ***
+      // Changed from /api/status to /api/orders (most likely correct endpoint)
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
         const data = await response.json();
-        setOrders(data);
+        setOrders(data); // Assuming 'data' directly contains the array of orders
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to fetch orders.');

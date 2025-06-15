@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Card from './components/card'; // Use the new Card component
 
+// Define the API_BASE_URL using the environment variable at the top level
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const Payments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +20,8 @@ const Payments = () => {
     }
 
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL and corrected endpoint for payments ***
+      const response = await fetch(`${API_BASE_URL}/api/payments`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

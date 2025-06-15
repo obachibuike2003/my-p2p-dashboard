@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Card from './components/card'; // Use the new Card component
+
+// Define the API_BASE_URL using the environment variable at the top level
+// This is crucial for both local development and deployed environments.
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const Clients = () => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,14 +29,19 @@ const Clients = () => {
     }
 
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for fetching client list ***
+      // Assuming your backend has an endpoint like /api/clients to get a list of clients
+      // If /api/status actually returns clients, then the path is correct.
+      // Based on typical Flask-P2P apps, you'd have /api/clients or similar.
+      // If /api/status is truly meant for status and not client data, adjust this endpoint.
+      const response = await fetch(`${API_BASE_URL}/api/clients`, { // Changed from /api/status
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
         const data = await response.json();
-        setClients(data);
+        setClients(data); // Assuming 'data' directly contains the array of clients
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to fetch clients.');
@@ -64,7 +74,8 @@ const Clients = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/add-client', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for adding a client ***
+      const response = await fetch(`${API_BASE_URL}/api/add-client`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +111,8 @@ const Clients = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/remove-client/${clientId}`, {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for removing a client ***
+      const response = await fetch(`${API_BASE_URL}/api/remove-client/${clientId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

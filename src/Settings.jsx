@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Card from './components/card'; // Note the lowercase 'c' for 'card'
 
+// Define the API_BASE_URL using the environment variable at the top level
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const Settings = () => {
   const [config, setConfig] = useState({
     bybitApiKey: '',
@@ -27,14 +30,15 @@ const Settings = () => {
     }
 
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL and corrected endpoint for config ***
+      const response = await fetch(`${API_BASE_URL}/api/config`, { // Changed from /api/status
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
         const data = await response.json();
-        setConfig(data);
+        setConfig(data); // Assuming 'data' directly contains the config object
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to fetch configuration.');
@@ -70,7 +74,8 @@ const Settings = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/config', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for saving config ***
+      const response = await fetch(`${API_BASE_URL}/api/config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,6 +94,7 @@ const Settings = () => {
     } catch (err) {
       console.error('Error saving config:', err);
       setError('Network error or server unreachable. Could not save configuration.');
+    
     }
   };
 

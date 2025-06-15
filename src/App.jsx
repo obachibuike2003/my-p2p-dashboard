@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import './index.css'; // Global CSS for main layout
-// Card component is imported in the pages themselves if they use it
+
+// Define the API_BASE_URL using the environment variable at the top level
+// This is the correct way for Vite. If using Create React App, it's process.env.REACT_APP_BACKEND_URL
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 
 // Dynamically import page components
 const Login = lazy(() => import('./Login.jsx'));
@@ -21,7 +25,8 @@ const App = () => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+        // *** MODIFIED LINE HERE ***
+        const response = await fetch(`${API_BASE_URL}/api/status`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -61,84 +66,106 @@ const App = () => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        await fetch('http://localhost:5000/api/logout', {
+        // *** MODIFIED LINE HERE ***
+        await fetch(`${API_BASE_URL}/api/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setCurrentPage('Login');
       } catch (error) {
-        console.error('Logout API call failed:', error);
+        console.error('Logout failed:', error);
+        // Even if logout fails on the backend, clear local state for UX
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setCurrentPage('Login');
       }
+    } else {
+      localStorage.removeItem('token');
+      setIsAuthenticated(false);
+      setCurrentPage('Login');
     }
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-    setCurrentPage('Login');
   };
 
-  // This function renders the appropriate page component based on `currentPage` state
+
+  // Helper to render the current page component
   const renderPage = () => {
+    if (loadingApp) {
+      return <div>Loading application...</div>;
+    }
+
+    if (!isAuthenticated) {
+      return (
+        <Suspense fallback={<div>Loading Login...</div>}>
+          <Login onLoginSuccess={handleLoginSuccess} />
+        </Suspense>
+      );
+    }
+
     switch (currentPage) {
-      case 'Login':
-        return <Login onLoginSuccess={handleLoginSuccess} />;
       case 'Dashboard':
-        return <Dashboard setCurrentPage={setCurrentPage} />; // Pass setCurrentPage for navigation
+        return (
+          <Suspense fallback={<div>Loading Dashboard...</div>}>
+            <Dashboard onLogout={handleLogout} />
+          </Suspense>
+        );
       case 'Settings':
-        return <Settings />;
+        return (
+          <Suspense fallback={<div>Loading Settings...</div>}>
+            <Settings onLogout={handleLogout} />
+          </Suspense>
+        );
       case 'Clients':
-        return <Clients />;
+        return (
+          <Suspense fallback={<div>Loading Clients...</div>}>
+            <Clients onLogout={handleLogout} />
+          </Suspense>
+        );
       case 'Orders':
-        return <Orders />;
+        return (
+          <Suspense fallback={<div>Loading Orders...</div>}>
+            <Orders onLogout={handleLogout} />
+          </Suspense>
+        );
       case 'Payments':
-        return <Payments />;
+        return (
+          <Suspense fallback={<div>Loading Payments...</div>}>
+            <Payments onLogout={handleLogout} />
+          </Suspense>
+        );
       case 'Logs':
-        return <Logs />;
+        return (
+          <Suspense fallback={<div>Loading Logs...</div>}>
+            <Logs onLogout={handleLogout} />
+          </Suspense>
+        );
       default:
-        return <p>Page not found.</p>;
+        return (
+          <Suspense fallback={<div>Loading Dashboard...</div>}>
+            <Dashboard onLogout={handleLogout} />
+          </Suspense>
+        );
     }
   };
 
   return (
-    <div className="app-container">
-      {/* Navbar */}
-      <nav className="navbar">
-        <div className="navbar-brand">P2P Bot Dashboard</div>
-        {isAuthenticated && (
-          <ul className="navbar-nav">
-            <li className="nav-item">
-              <button onClick={() => setCurrentPage('Dashboard')} className={currentPage === 'Dashboard' ? 'nav-link active' : 'nav-link'}>Dashboard</button>
-            </li>
-            <li className="nav-item">
-              <button onClick={() => setCurrentPage('Orders')} className={currentPage === 'Orders' ? 'nav-link active' : 'nav-link'}>Orders</button>
-            </li>
-            <li className="nav-item">
-              <button onClick={() => setCurrentPage('Payments')} className={currentPage === 'Payments' ? 'nav-link active' : 'nav-link'}>Payments</button>
-            </li>
-            <li className="nav-item">
-              <button onClick={() => setCurrentPage('Clients')} className={currentPage === 'Clients' ? 'nav-link active' : 'nav-link'}>Clients</button>
-            </li>
-            <li className="nav-item">
-              <button onClick={() => setCurrentPage('Settings')} className={currentPage === 'Settings' ? 'nav-link active' : 'nav-link'}>Settings</button>
-            </li>
-            <li className="nav-item">
-              <button onClick={() => setCurrentPage('Logs')} className={currentPage === 'Logs' ? 'nav-link active' : 'nav-link'}>Logs</button>
-            </li>
-            <li className="nav-item">
-              <button onClick={handleLogout} className="nav-link logout-btn">Logout</button>
-            </li>
-          </ul>
-        )}
-      </nav>
-
-      {/* Main Content Area */}
-      <main className="main-content">
-        {loadingApp ? (
-          <div className="loading-spinner">Loading application...</div>
-        ) : (
-          <Suspense fallback={<div className="loading-spinner">Loading page...</div>}>
-            {renderPage()}
-          </Suspense>
-        )}
+    <div className="App-container">
+      {isAuthenticated && (
+        <nav className="App-nav">
+          <button onClick={() => setCurrentPage('Dashboard')}>Dashboard</button>
+          <button onClick={() => setCurrentPage('Settings')}>Settings</button>
+          <button onClick={() => setCurrentPage('Clients')}>Clients</button>
+          <button onClick={() => setCurrentPage('Orders')}>Orders</button>
+          <button onClick={() => setCurrentPage('Payments')}>Payments</button>
+          <button onClick={() => setCurrentPage('Logs')}>Logs</button>
+          <button onClick={handleLogout} className="App-logout-button">Logout</button>
+        </nav>
+      )}
+      <main className="App-main-content">
+        {renderPage()}
       </main>
     </div>
   );

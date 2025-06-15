@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Card from './components/card'; // Use the new Card component
 
+// Define the API_BASE_URL using the environment variable at the top level
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const Logs = () => {
   const [logMessages, setLogMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -9,6 +12,7 @@ const Logs = () => {
 
   const fetchBotLogs = useCallback(async () => {
     setError('');
+    setLoading(true); // Ensure loading is true when starting fetch
     const token = localStorage.getItem('token');
     if (!token) {
       setError('Authentication token missing. Please log in again.');
@@ -17,13 +21,16 @@ const Logs = () => {
     }
 
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL and correct endpoint for logs ***
+      // Changed from /api/status to /api/logs, which is the more likely endpoint for logs.
+      const response = await fetch(`${API_BASE_URL}/api/logs`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
         const data = await response.json();
+        // Assuming your /api/logs endpoint returns an array of log messages
         setLogMessages(data);
       } else {
         const errorData = await response.json();

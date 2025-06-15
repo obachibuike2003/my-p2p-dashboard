@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import Card from './components/card'; // Use the new Card component
 
+// Define the API_BASE_URL using the environment variable at the top level
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
@@ -13,7 +16,8 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/login', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for login ***
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

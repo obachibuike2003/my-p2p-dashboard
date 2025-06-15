@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Card from './components/card'; // Use the new Card component
 
+// Define the API_BASE_URL using the environment variable at the top level
+const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const Dashboard = ({ setCurrentPage }) => {
   const [botStatus, setBotStatus] = useState('Loading...');
   const [lastRunTime, setLastRunTime] = useState('N/A');
@@ -17,7 +20,8 @@ const Dashboard = ({ setCurrentPage }) => {
       return;
     }
     try {
-      const response = await fetch('https://my-p2p-dashboard.onrender.com/api/status', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for fetching status ***
+      const response = await fetch(`${API_BASE_URL}/api/status`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -42,7 +46,8 @@ const Dashboard = ({ setCurrentPage }) => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const response = await fetch('http://localhost:5000/api/logs', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for fetching logs ***
+      const response = await fetch(`${API_BASE_URL}/api/logs`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -76,7 +81,8 @@ const Dashboard = ({ setCurrentPage }) => {
     setMessage('');
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://localhost:5000/api/trigger-bot-run', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for triggering bot run ***
+      const response = await fetch(`${API_BASE_URL}/api/trigger-bot-run`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -100,7 +106,8 @@ const Dashboard = ({ setCurrentPage }) => {
     setMessage('');
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://localhost:5000/api/stop-bot', {
+      // *** MODIFIED LINE HERE: Using API_BASE_URL for stopping bot ***
+      const response = await fetch(`${API_BASE_URL}/api/stop-bot`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

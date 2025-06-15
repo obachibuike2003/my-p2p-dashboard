@@ -1,18 +1,18 @@
-# --- ALL NECESSARY IMPORTS MUST BE AT THE VERY TOP, ONCE ---
 import os
 import sys
 import logging
-import random # Imported but not used in provided code, kept for completeness
+import random
 import json
 import threading
 import time
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
-from flask_cors import CORS # Ensure 'pip install Flask-Cors'
-from dotenv import load_dotenv # Ensure 'pip install python-dotenv'
-from werkzeug.security import generate_password_hash, check_password_hash # Ensure 'pip install Werkzeug'
+from flask_cors import CORS
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 from functools import wraps
+import requests # Assuming this is used by your other modules for API calls
 
 # --- Global Configurations and Data File Paths ---
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -237,12 +237,10 @@ if not backend_users and 'main_users' in locals() and main_users: # Check if mai
     save_json_data(USERS_FILE, backend_users)
 
 # --- ADMIN CREDENTIAL LOADING (CRITICAL for login) ---
-# These variables are read from Render's Environment settings (or your local .env file)
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-# This uses the hardcoded hash you provided as a fallback if not set in environment variables
-# This is the exact hash for 'MULLER2003' generated with pbkdf2:sha256
-ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', "pbkdf2:sha256:1000000$fXxxEW7oKwpbvD0g$a08acb1c3662571cd0ba539f5ec14e75c7d53de71afc835fce7aeef6654ebe74")
-print(f"DEBUG: ADMIN_PASSWORD_HASH loaded: {ADMIN_PASSWORD_HASH[:15]}...") # Print first few chars for security in logs
+# This now STRICTLY reads from environment variables. There is NO hardcoded fallback here.
+ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH') 
+print(f"DEBUG: ADMIN_PASSWORD_HASH loaded: {ADMIN_PASSWORD_HASH[:15]}..." if ADMIN_PASSWORD_HASH else "DEBUG: ADMIN_PASSWORD_HASH is None") # Print first few chars for security in logs
 
 if ADMIN_PASSWORD_HASH is None or ADMIN_PASSWORD_HASH == "":
     root_logger.critical("ADMIN_PASSWORD_HASH environment variable is NOT set or is empty! Admin login will fail.")
@@ -566,12 +564,12 @@ def run_bot_in_background():
                                     order["status"] = f"Failed to Get Seller Info via API, Manual Payment Needed (Reason: {error_msg[:50]}...)"
                                     break
                             save_json_data(ORDERS_FILE, backend_orders)
-                # Removed erroneous 'else:' that was not paired with any 'if' or loop
-                error_reason = f"Failed to place P2P order for {selected_offer.get('nickName')}. Reason: {error_msg or 'Unknown issue'}. See placeorder.py logs for details."
-                root_logger.error(f"❌ {error_reason}")
-                root_logger.warning(f"No order placed. Check Bybit API key permissions and your balance.")
-                send_critical_alert(f"CRITICAL BOT ERROR: P2P Order Placement Failed", error_reason)
-                
+                    else: # This 'else' was misplaced in your original code, it should correspond to 'if order_details:'
+                        error_reason = f"Failed to place P2P order for {selected_offer.get('nickName')}. Reason: {error_msg or 'Unknown issue'}. See placeorder.py logs for details."
+                        root_logger.error(f"❌ {error_reason}")
+                        root_logger.warning(f"No order placed. Check Bybit API key permissions and your balance.")
+                        send_critical_alert(f"CRITICAL BOT ERROR: P2P Order Placement Failed", error_reason)
+                        
             root_logger.info("--- Starting client payouts for this cycle ---")
             backend_bot_status = "Running (Processing Client Payouts)"
             for user in backend_users:
@@ -690,12 +688,12 @@ def login():
     global ADMIN_PASSWORD_HASH, ADMIN_USERNAME
     
     if ADMIN_PASSWORD_HASH is None or ADMIN_PASSWORD_HASH == "":
-        print("ERROR: ADMIN_PASSWORD_HASH is None or empty during login attempt. Check Render Environment variables!")
+        print("ERROR: ADMIN_PASSWORD_HASH is None or empty during login attempt. Check Railway Environment variables!")
         root_logger.critical("ADMIN_PASSWORD_HASH is None or empty during login attempt. Server misconfigured.")
         return jsonify({"message": "Server configuration error: Admin password hash not loaded."}), 500
 
-    print(f"Retrieved ADMIN_PASSWORD_HASH (global var): {ADMIN_PASSWORD_HASH[:15]}...")
-    print(f"Password provided (first 5 chars): {password[:5]}...")
+    print(f"Retrieved ADMIN_PASSWORD_HASH (global var): {ADMIN_PASSWORD_HASH[:15]}..." if ADMIN_PASSWORD_HASH else "ERROR: ADMIN_PASSWORD_HASH is still None after load.")
+    print(f"Password provided (first 5 chars): {password[:5]}..." if password else "Password not provided.")
 
     if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
         print("Login successful for admin!")
