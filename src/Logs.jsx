@@ -10,23 +10,23 @@ const Logs = () => {
   const [error, setError] = useState('');
   const logViewerRef = useRef(null); // Ref to scroll to bottom
 
+  // Removed onLogout prop from function signature if it were ever passed
+
   const fetchBotLogs = useCallback(async () => {
     setError('');
     setLoading(true); // Ensure loading is true when starting fetch
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Authentication token missing. Please log in again.');
-      setLoading(false);
-      return;
-    }
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   setError('Authentication token missing. Please log in again.');
+    //   setLoading(false);
+    //   return;
+    // }
 
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL and correct endpoint for logs ***
-      // Changed from /api/status to /api/logs, which is the more likely endpoint for logs.
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/logs`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -34,7 +34,8 @@ const Logs = () => {
         setLogMessages(data);
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to fetch logs.');
+        // Updated error message to reflect no login
+        setError(errorData.message || 'Failed to fetch logs (no authentication required).');
       }
     } catch (err) {
       console.error('Error fetching bot logs:', err);
@@ -42,7 +43,7 @@ const Logs = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Dependency array changed, token removed
 
   useEffect(() => {
     fetchBotLogs();

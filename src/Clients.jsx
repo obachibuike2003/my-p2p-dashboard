@@ -18,33 +18,31 @@ const Clients = () => {
     amount: ''
   });
 
+  // Removed onLogout prop from function signature as it's no longer passed from App.jsx
+
   const fetchClients = useCallback(async () => {
     setLoading(true);
     setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Authentication token missing. Please log in again.');
-      setLoading(false);
-      return;
-    }
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   setError('Authentication token missing. Please log in again.');
+    //   setLoading(false);
+    //   return;
+    // }
 
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for fetching client list ***
-      // Assuming your backend has an endpoint like /api/clients to get a list of clients
-      // If /api/status actually returns clients, then the path is correct.
-      // Based on typical Flask-P2P apps, you'd have /api/clients or similar.
-      // If /api/status is truly meant for status and not client data, adjust this endpoint.
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/clients`, { // Changed from /api/status
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
         setClients(data); // Assuming 'data' directly contains the array of clients
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to fetch clients.');
+        // Updated error message to reflect no login
+        setError(errorData.message || 'Failed to fetch clients (no authentication required).');
       }
     } catch (err) {
       console.error('Error fetching clients:', err);
@@ -52,7 +50,7 @@ const Clients = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Dependency array changed, token removed
 
   useEffect(() => {
     fetchClients();
@@ -67,19 +65,20 @@ const Clients = () => {
     e.preventDefault();
     setMessage('');
     setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Authentication token missing. Please log in again.');
-      return;
-    }
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   setError('Authentication token missing. Please log in again.');
+    //   return;
+    // }
 
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for adding a client ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/add-client`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          // Removed 'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(newClient),
       });
@@ -99,24 +98,51 @@ const Clients = () => {
   };
 
   const handleRemoveClient = async (clientId) => {
-    if (!window.confirm(`Are you sure you want to remove client ${clientId}?`)) {
-      return;
-    }
-    setMessage('');
-    setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Authentication token missing. Please log in again.');
+    // Replaced window.confirm with a custom message box for better UI/UX
+    // (This is a general best practice, not strictly related to login removal)
+    const confirmed = await new Promise((resolve) => {
+      const CustomConfirm = ({ message, onConfirm, onCancel }) => (
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          backgroundColor: '#333', color: 'white', padding: '20px', borderRadius: '8px',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)', zIndex: 1000, textAlign: 'center'
+        }}>
+          <p>{message}</p>
+          <button onClick={() => { onConfirm(); document.body.removeChild(dialogDiv); }} style={{ margin: '5px', padding: '8px 15px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Yes</button>
+          <button onClick={() => { onCancel(); document.body.removeChild(dialogDiv); }} style={{ margin: '5px', padding: '8px 15px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>No</button>
+        </div>
+      );
+
+      const dialogDiv = document.createElement('div');
+      document.body.appendChild(dialogDiv);
+      ReactDOM.render(
+        <CustomConfirm
+          message={`Are you sure you want to remove client ${clientId}?`}
+          onConfirm={() => resolve(true)}
+          onCancel={() => resolve(false)}
+        />,
+        dialogDiv
+      );
+    });
+
+    if (!confirmed) {
       return;
     }
 
+    setMessage('');
+    setError('');
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   setError('Authentication token missing. Please log in again.');
+    //   return;
+    // }
+
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for removing a client ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/remove-client/${clientId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
 
       const data = await response.json();

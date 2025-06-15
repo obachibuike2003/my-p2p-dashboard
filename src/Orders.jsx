@@ -9,30 +9,31 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Removed onLogout prop from function signature if it were ever passed
+
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Authentication token missing. Please log in again.');
-      setLoading(false);
-      return;
-    }
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   setError('Authentication token missing. Please log in again.');
+    //   setLoading(false);
+    //   return;
+    // }
 
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL and corrected endpoint for orders ***
-      // Changed from /api/status to /api/orders (most likely correct endpoint)
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/orders`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
         setOrders(data); // Assuming 'data' directly contains the array of orders
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to fetch orders.');
+        // Updated error message to reflect no login
+        setError(errorData.message || 'Failed to fetch orders (no authentication required).');
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -40,7 +41,7 @@ const Orders = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Dependency array changed, token removed
 
   useEffect(() => {
     fetchOrders();

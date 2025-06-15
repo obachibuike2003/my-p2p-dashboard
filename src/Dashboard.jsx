@@ -3,6 +3,9 @@ import Card from './components/card'; // Use the new Card component
 
 // Define the API_BASE_URL using the environment variable at the top level
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
+// Removed onLogout prop from function signature as it's no longer passed from App.jsx
+// setCurrentPage is still needed for navigation to Logs page.
 const Dashboard = ({ setCurrentPage }) => {
   const [botStatus, setBotStatus] = useState('Loading...');
   const [lastRunTime, setLastRunTime] = useState('N/A');
@@ -13,17 +16,17 @@ const Dashboard = ({ setCurrentPage }) => {
   const [logMessages, setLogMessages] = useState([]);
 
   const fetchBotStatus = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      // Not authenticated, App.jsx should handle redirect to login
-      return;
-    }
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   // If authentication was required, App.jsx would handle redirect.
+    //   // Now, we proceed without a token.
+    //   return;
+    // }
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for fetching status ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -39,17 +42,16 @@ const Dashboard = ({ setCurrentPage }) => {
       console.error('Error fetching bot status:', error);
       setBotStatus('Error (Network)');
     }
-  }, []);
+  }, []); // Dependency array changed, token removed
 
   const fetchBotLogs = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) return; // Proceed without token
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for fetching logs ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/logs`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -60,7 +62,7 @@ const Dashboard = ({ setCurrentPage }) => {
     } catch (error) {
       console.error('Error fetching bot logs:', error);
     }
-  }, []);
+  }, []); // Dependency array changed, token removed
 
   useEffect(() => {
     fetchBotStatus();
@@ -78,14 +80,13 @@ const Dashboard = ({ setCurrentPage }) => {
   const handleRunBot = async () => {
     setLoading(true);
     setMessage('');
-    const token = localStorage.getItem('token');
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for triggering bot run ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/trigger-bot-run`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
       setMessage(data.message);
@@ -103,14 +104,13 @@ const Dashboard = ({ setCurrentPage }) => {
   const handleStopBot = async () => {
     setLoading(true);
     setMessage('');
-    const token = localStorage.getItem('token');
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for stopping bot ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/stop-bot`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
       setMessage(data.message);

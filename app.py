@@ -9,9 +9,9 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-from werkzeug.security import generate_password_hash, check_password_hash
-import uuid
-from functools import wraps
+# from werkzeug.security import generate_password_hash, check_password_hash # REMOVED: Not needed without login
+import uuid # REMOVED: Not needed for session token if login is removed
+from functools import wraps # REMOVED: Not needed for login_required decorator
 import requests # Assuming this is used by your other modules for API calls
 
 # --- Global Configurations and Data File Paths ---
@@ -70,12 +70,13 @@ def load_json_data(file_path, default_data=None):
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 if isinstance(data, dict):
+                    # No longer need token_expiry conversion if not used for auth
                     if 'lastRunTime' in data and data['lastRunTime'] is not None and isinstance(data['lastRunTime'], str):
                         try: data['lastRunTime'] = datetime.fromisoformat(data['lastRunTime'])
                         except ValueError: pass
-                    if 'token_expiry' in data and data['token_expiry'] is not None and isinstance(data['token_expiry'], str):
-                        try: data['token_expiry'] = datetime.fromisoformat(data['token_expiry'])
-                        except ValueError: pass
+                    # if 'token_expiry' in data and data['token_expiry'] is not None and isinstance(data['token_expiry'], str):
+                    #     try: data['token_expiry'] = datetime.fromisoformat(data['token_expiry'])
+                    #     except ValueError: pass
                 elif isinstance(data, list):
                     for item in data:
                         if 'timestamp' in item and item['timestamp'] is not None and isinstance(item['timestamp'], str):
@@ -165,6 +166,7 @@ def safe_api_call(api_func, *args, retries=3, delay=5, **kwargs) -> tuple[any, s
     Returns (result, error_message) or (None, error_message).
     """
     for attempt in range(1, retries + 1):
+        # Bot should stop check is still relevant if bot is running and needs to halt mid-API call
         if bot_should_stop.is_set():
             root_logger.info(f"Bot received stop signal during {api_func.__name__} retry loop. Halting API calls.")
             return (None, "Bot stopped by user during API call.")
@@ -201,8 +203,8 @@ backend_config = load_json_data(CONFIG_FILE, default_data={
     "email_username": "",
     "email_password": "",
     "alert_recipient_email": "",
-    "session_token": None,
-    "token_expiry": None
+    # "session_token": None, # REMOVED: Not needed without login
+    # "token_expiry": None   # REMOVED: Not needed without login
 })
 backend_users = load_json_data(USERS_FILE, default_data=[
     {"id": "user1", "name": "Kuda Client A", "account": "1234567890", "bank": "50211", "amount": 5000.0},
@@ -237,53 +239,55 @@ if not backend_users and 'main_users' in locals() and main_users: # Check if mai
     save_json_data(USERS_FILE, backend_users)
 
 # --- ADMIN CREDENTIAL LOADING (CRITICAL for login) ---
-ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-# This now STRICTLY reads from environment variables. There is NO hardcoded fallback here.
-ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH') 
-print(f"DEBUG: ADMIN_PASSWORD_HASH loaded: {ADMIN_PASSWORD_HASH[:15]}..." if ADMIN_PASSWORD_HASH else "DEBUG: ADMIN_PASSWORD_HASH is None") # Print first few chars for security in logs
+# ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin') # REMOVED: Not needed without login
+# ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH') # REMOVED: Not needed without login
+# print(f"DEBUG: ADMIN_PASSWORD_HASH loaded: {ADMIN_PASSWORD_HASH[:15]}..." if ADMIN_PASSWORD_HASH else "DEBUG: ADMIN_PASSWORD_HASH is None") # REMOVED: Not needed without login
 
-if ADMIN_PASSWORD_HASH is None or ADMIN_PASSWORD_HASH == "":
-    root_logger.critical("ADMIN_PASSWORD_HASH environment variable is NOT set or is empty! Admin login will fail.")
+# if ADMIN_PASSWORD_HASH is None or ADMIN_PASSWORD_HASH == "": # REMOVED: Not needed without login
+#     root_logger.critical("ADMIN_PASSWORD_HASH environment variable is NOT set or is empty! Admin login will fail.") # REMOVED: Not needed without login
 
 # --- Flask Application Setup (ONLY ONCE IN THE ENTIRE FILE) ---
 app = Flask(__name__)
-CORS(app)
+# CORS(app) # Original CORS - we will update this to allow all origins
+# Updated CORS to allow all origins when login is removed, for simpler setup
+CORS(app, origins="*", allow_headers=["Content-Type"])
 
 print("- - - app.py execution started! (Final Stable Version) - - -")
 
 # --- Define Login Required Decorator ---
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            root_logger.warning("Attempted unauthorized access: Missing Authorization header.")
-            return jsonify({"message": "Authorization token is missing!"}), 401
+# REMOVED: Not needed without login
+# def login_required(f):
+#     @wraps(f)
+#     def decorated_function(*args, **kwargs):
+#         auth_header = request.headers.get('Authorization')
+#         if not auth_header:
+#             root_logger.warning("Attempted unauthorized access: Missing Authorization header.")
+#             return jsonify({"message": "Authorization token is missing!"}), 401
 
-        try:
-            token = auth_header.split("Bearer ")[1]
-        except IndexError:
-            root_logger.warning("Attempted unauthorized access: Invalid Authorization header format.")
-            return jsonify({"message": "Invalid token format."}), 401
+#         try:
+#             token = auth_header.split("Bearer ")[1]
+#         except IndexError:
+#             root_logger.warning("Attempted unauthorized access: Invalid Authorization header format.")
+#             return jsonify({"message": "Invalid token format."}), 401
 
-        stored_token = backend_config.get('session_token')
-        token_expiry = backend_config.get('token_expiry')
+#         stored_token = backend_config.get('session_token')
+#         token_expiry = backend_config.get('token_expiry')
 
-        if not stored_token or token != stored_token:
-            log_provided_token = token[:5] + '...' if token else 'None'
-            log_stored_token = stored_token[:5] + '...' if stored_token else 'None'
-            root_logger.warning(f"Attempted unauthorized access: Invalid token provided. Provided: {log_provided_token}, Expected: {log_stored_token}")
-            return jsonify({"message": "Invalid token."}), 401
+#         if not stored_token or token != stored_token:
+#             log_provided_token = token[:5] + '...' if token else 'None'
+#             log_stored_token = stored_token[:5] + '...' if stored_token else 'None'
+#             root_logger.warning(f"Attempted unauthorized access: Invalid token provided. Provided: {log_provided_token}, Expected: {log_stored_token}")
+#             return jsonify({"message": "Invalid token."}), 401
         
-        if not isinstance(token_expiry, datetime) or datetime.now() > token_expiry:
-            root_logger.warning("Attempted unauthorized access: Token has expired or is invalid type.")
-            backend_config['session_token'] = None
-            backend_config['token_expiry'] = None
-            save_json_data(CONFIG_FILE, backend_config)
-            return jsonify({"message": "Token has expired."}), 401
+#         if not isinstance(token_expiry, datetime) or datetime.now() > token_expiry:
+#             root_logger.warning("Attempted unauthorized access: Token has expired or is invalid type.")
+#             backend_config['session_token'] = None
+#             backend_config['token_expiry'] = None
+#             save_json_data(CONFIG_FILE, backend_config)
+#             return jsonify({"message": "Token has expired."}), 401
 
-        return f(*args, **kwargs)
-    return decorated_function
+#         return f(*args, **kwargs)
+#     return decorated_function
 
 # --- Background Bot Execution Logic ---
 def run_bot_in_background():
@@ -396,165 +400,151 @@ def run_bot_in_background():
                         return
 
                     if order_details:
-                        order_no = order_details.get('orderNo', 'N/A')
-                        root_logger.info(f"✅ P2P Order '{order_no}' successfully placed for {trade_amount_ngn} NGN on Bybit.")
-                        
-                        new_order = {
-                            "id": order_no,
-                            "clientId": "Bybit Seller (Auto-Paid)",
-                            "clientName": selected_offer.get('nickName', 'Bybit Seller'),
-                            "amountFiat": trade_amount_ngn,
-                            "amountCrypto": float(trade_amount_ngn) / float(selected_offer.get('price', 1)),
-                            "sellerNickname": selected_offer.get('nickName', 'N/A'),
-                            "status": "Order Placed, Getting Seller Details via API",
-                            "bybitOrderId": order_no,
-                            "paystackTxId": None,
-                            "timestamp": datetime.now()
-                        }
-                        backend_orders.append(new_order)
-                        save_json_data(ORDERS_FILE, backend_orders)
+                        order_no = order_details.get('orderNo') # Capture order_no here
 
-                        root_logger.info(f"Attempting to get seller bank details for order {order_no} via Bybit Merchant API...")
-                        backend_bot_status = "Running (Getting Seller Info via API)"
-                        
-                        seller_payment_details, error_msg = safe_api_call(
-                            bybit_merchant_p2p.get_counterparty_payment_details,
+                        # Ensure this part of the code is within the 'if order_details:' block
+                        root_logger.info(f"Order {order_no} placed successfully on Bybit. Attempting to get seller bank details...")
+                        backend_bot_status = "Running (Fetching Seller Details)"
+
+                        seller_bank_details, error_msg = safe_api_call(
+                            bybit_merchant_p2p.get_order_info,
                             order_no,
                             bybit_api_key,
                             bybit_api_secret,
                             retries=3, delay=5
                         )
-
-                        if bot_should_stop.is_set() and seller_payment_details is None:
-                            root_logger.info("Bot received stop signal during getting seller details. Halting.")
+                        
+                        if bot_should_stop.is_set() and seller_bank_details is None:
+                            root_logger.info("Bot received stop signal during fetching seller details. Halting.")
                             _exit_gracefully()
                             return
 
-                        if seller_payment_details:
-                            root_logger.info(f"✅ Successfully retrieved seller bank details via Bybit Merchant API for order {order_no}.")
-                            
-                            seller_account_number = seller_payment_details.get("accountNumber")
-                            seller_bank_name_bybit = seller_payment_details.get("bank")
-                            seller_account_holder_name = seller_payment_details.get("accountHolderName")
+                        if seller_bank_details:
+                            seller_account_number = seller_bank_details.get('accountNo')
+                            seller_bank_name = seller_bank_details.get('bankName')
+                            seller_name = seller_bank_details.get('name')
+                            seller_bank_code = get_nigerian_bank_code(seller_bank_name)
 
-                            seller_bank_code_for_paystack = get_nigerian_bank_code(seller_bank_name_bybit)
-
-                            if not all([seller_account_number, seller_bank_name_bybit, seller_account_holder_name, seller_bank_code_for_paystack]):
-                                error_reason = f"Incomplete seller payment details or unknown bank for order {order_no}. Bybit Bank Name: {seller_bank_name_bybit}, Paystack Code: {seller_bank_code_for_paystack}. MANUAL PAYMENT REQUIRED!"
-                                root_logger.error(f"❌ {error_reason}")
-                                send_critical_alert(f"BOT ALERT: Manual Bybit Payment Needed for Order {order_no}", error_reason)
+                            if not seller_bank_code:
+                                root_logger.error(f"Could not determine bank code for seller's bank '{seller_bank_name}'. Manual payment for order {order_no} required!")
+                                send_critical_alert(f"BOT ALERT: Unknown Seller Bank for Order {order_no}", f"Could not find bank code for '{seller_bank_name}'.")
                                 for order in backend_orders:
                                     if order["bybitOrderId"] == order_no:
-                                        order["status"] = "Incomplete Seller Details/Unknown Bank, Manual Payment Needed"
+                                        order["status"] = "Unknown Seller Bank, Manual Payment Needed"
                                         break
                                 save_json_data(ORDERS_FILE, backend_orders)
-                            else:
-                                root_logger.info(f"Attempting Paystack payment to Bybit seller: {seller_account_holder_name} ({seller_account_number}) at {seller_bank_name_bybit} (Code: {seller_bank_code_for_paystack}).")
-                                
-                                payment_to_seller_id, error_msg = safe_api_call(
-                                    payment.send_payment,
-                                    seller_account_number,
-                                    seller_bank_code_for_paystack,
-                                    trade_amount_ngn,
-                                    paystack_secret_key,
-                                    retries=3, delay=10
-                                )
+                                continue # Skip to next cycle after logging error
+                            
+                            root_logger.info(f"Seller bank details for order {order_no}: Account '{seller_account_number}', Bank '{seller_bank_name}' (Code: {seller_bank_code}), Name: '{seller_name}'.")
 
-                                if bot_should_stop.is_set() and payment_to_seller_id is None:
-                                    root_logger.info("Bot received stop signal during seller payment. Halting.")
+                            new_order = {
+                                "id": str(uuid.uuid4()), # Generate a UUID for your internal order ID
+                                "bybitOrderId": order_no,
+                                "clientName": backend_users[0]['name'] if backend_users else 'Default Client', # Assuming first client or default
+                                "amountFiat": trade_amount_ngn,
+                                "amountCrypto": order_details.get('amount'),
+                                "sellerNickname": selected_offer.get('nickName'),
+                                "paystackTxId": None,
+                                "status": "Order Placed, Processing Payment",
+                                "timestamp": datetime.now()
+                            }
+                            backend_orders.append(new_order)
+                            save_json_data(ORDERS_FILE, backend_orders)
+
+                            root_logger.info(f"Attempting to send payment via Paystack to seller for order {order_no}...")
+                            backend_bot_status = "Running (Sending Payment to Seller)"
+                            
+                            payment_to_seller_id, error_msg = safe_api_call(
+                                payment.send_payment,
+                                seller_account_number,
+                                seller_bank_code,
+                                trade_amount_ngn,
+                                paystack_secret_key,
+                                retries=3, delay=10
+                            )
+                            
+                            if bot_should_stop.is_set() and payment_to_seller_id is None:
+                                root_logger.info("Bot received stop signal during payment to seller. Halting.")
+                                _exit_gracefully()
+                                return
+                            
+                            if payment_to_seller_id:
+                                root_logger.info(f"✅ Paystack payment sent to seller for order {order_no}! Paystack Transfer ID: {payment_to_seller_id}")
+                                root_logger.info(f"Attempting to mark order {order_no} as paid on Bybit via API...")
+                                backend_bot_status = "Running (Marking Paid on Bybit via API)"
+
+                                mark_paid_success, error_msg = safe_api_call(
+                                    bybit_merchant_p2p.mark_order_paid,
+                                    order_no,
+                                    bybit_api_key,
+                                    bybit_api_secret,
+                                    retries=3, delay=5
+                                )
+                                
+                                if bot_should_stop.is_set() and mark_paid_success is None:
+                                    root_logger.info("Bot received stop signal during marking paid. Halting.")
                                     _exit_gracefully()
                                     return
+                                
+                                if mark_paid_success:
+                                    root_logger.info(f"✅ Order {order_no} successfully marked as paid on Bybit via API.")
+                                    # Update order status in backend_orders list
+                                    for order in backend_orders:
+                                        if order["bybitOrderId"] == order_no:
+                                            order["paystackTxId"] = payment_to_seller_id
+                                            order["status"] = "Payment Sent & Confirmed on Bybit via API"
+                                            break
+                                    save_json_data(ORDERS_FILE, backend_orders)
 
-                                if payment_to_seller_id:
-                                    root_logger.info(f"✅ Payment sent to Bybit seller for order {order_no}! Paystack Transfer ID: {payment_to_seller_id}")
-                                    
-                                    new_payment_record = {
-                                        "id": payment_to_seller_id,
-                                        "clientId": "Bybit Seller",
-                                        "clientName": selected_offer.get('nickName', 'Bybit Seller'),
-                                        "amount": trade_amount_ngn,
-                                        "bank": seller_bank_name_bybit,
-                                        "status": "Success",
-                                        "timestamp": datetime.now()
-                                    }
-                                    backend_payments.append(new_payment_record)
-                                    save_json_data(PAYMENTS_FILE, backend_payments)
+                                    root_logger.info(f"Attempting to confirm order {order_no} on Bybit via API (release crypto)...")
+                                    backend_bot_status = "Running (Releasing Crypto on Bybit via API)"
 
-                                    root_logger.info(f"Attempting to mark order {order_no} as paid on Bybit via API...")
-                                    backend_bot_status = "Running (Confirming Payment on Bybit via API)"
-
-                                    mark_paid_success, error_msg = safe_api_call(
-                                        bybit_merchant_p2p.mark_order_as_paid,
+                                    confirm_order_success, error_msg = safe_api_call(
+                                        bybit_merchant_p2p.confirm_order_completion,
                                         order_no,
                                         bybit_api_key,
                                         bybit_api_secret,
                                         retries=3, delay=5
                                     )
 
-                                    if bot_should_stop.is_set() and mark_paid_success is None:
-                                        root_logger.info("Bot received stop signal during mark as paid. Halting.")
+                                    if bot_should_stop.is_set() and confirm_order_success is None:
+                                        root_logger.info("Bot received stop signal during order confirmation. Halting.")
                                         _exit_gracefully()
                                         return
 
-                                    if mark_paid_success:
-                                        root_logger.info(f"✅ Order {order_no} successfully marked as paid on Bybit via API.")
+                                    if confirm_order_success:
+                                        root_logger.info(f"✅ Order {order_no} successfully confirmed and crypto released on Bybit via API.")
                                         for order in backend_orders:
                                             if order["bybitOrderId"] == order_no:
-                                                order["paystackTxId"] = payment_to_seller_id
-                                                order["status"] = "Payment Sent & Confirmed on Bybit via API"
+                                                order["status"] = "Completed & Crypto Released"
                                                 break
                                         save_json_data(ORDERS_FILE, backend_orders)
-
-                                        root_logger.info(f"Attempting to confirm order {order_no} on Bybit via API (release crypto)...")
-                                        backend_bot_status = "Running (Releasing Crypto on Bybit via API)"
-
-                                        confirm_order_success, error_msg = safe_api_call(
-                                            bybit_merchant_p2p.confirm_order_completion,
-                                            order_no,
-                                            bybit_api_key,
-                                            bybit_api_secret,
-                                            retries=3, delay=5
-                                        )
-
-                                        if bot_should_stop.is_set() and confirm_order_success is None:
-                                            root_logger.info("Bot received stop signal during order confirmation. Halting.")
-                                            _exit_gracefully()
-                                            return
-
-                                        if confirm_order_success:
-                                            root_logger.info(f"✅ Order {order_no} successfully confirmed and crypto released on Bybit via API.")
-                                            for order in backend_orders:
-                                                if order["bybitOrderId"] == order_no:
-                                                    order["status"] = "Completed & Crypto Released"
-                                                    break
-                                            save_json_data(ORDERS_FILE, backend_orders)
-                                        else:
-                                            error_reason = f"Failed to confirm order {order_no} on Bybit via API. Reason: {error_msg or 'Unknown API issue'}. MANUAL RELEASE REQUIRED ON BYBIT!"
-                                            root_logger.error(f"❌ {error_reason}")
-                                            send_critical_alert(f"BOT ALERT: Manual Bybit Crypto Release Needed for Order {order_no}", error_reason)
-                                            for order in backend_orders:
-                                                if order["bybitOrderId"] == order_no:
-                                                    order["status"] = "Payment Confirmed, Manual Crypto Release Needed"
-                                                    break
-                                            save_json_data(ORDERS_FILE, backend_orders)
                                     else:
-                                        error_reason = f"Failed to mark order {order_no} as paid on Bybit via API. Reason: {error_msg or 'Unknown API issue'}. MANUAL CONFIRMATION REQUIRED ON BYBIT!"
+                                        error_reason = f"Failed to confirm order {order_no} on Bybit via API. Reason: {error_msg or 'Unknown API issue'}. MANUAL RELEASE REQUIRED ON BYBIT!"
                                         root_logger.error(f"❌ {error_reason}")
-                                        send_critical_alert(f"BOT ALERT: Manual Bybit Confirmation Needed for Order {order_no}", error_reason)
+                                        send_critical_alert(f"BOT ALERT: Manual Bybit Crypto Release Needed for Order {order_no}", error_reason)
                                         for order in backend_orders:
                                             if order["bybitOrderId"] == order_no:
-                                                order["status"] = f"Payment Sent to Seller, MANUAL CONFIRMATION NEEDED on Bybit (Reason: {error_msg[:50]}...)"
+                                                order["status"] = "Payment Confirmed, Manual Crypto Release Needed"
                                                 break
                                         save_json_data(ORDERS_FILE, backend_orders)
                                 else:
-                                    error_reason = f"Paystack payment to Bybit seller for order {order_no} failed. Reason: {error_msg or 'Unknown Paystack issue'}. MANUAL PAYMENT REQUIRED!"
+                                    error_reason = f"Failed to mark order {order_no} as paid on Bybit via API. Reason: {error_msg or 'Unknown API issue'}. MANUAL CONFIRMATION REQUIRED ON BYBIT!"
                                     root_logger.error(f"❌ {error_reason}")
-                                    send_critical_alert(f"BOT ALERT: Manual Paystack Payment Needed for Order {order_no}", error_reason)
+                                    send_critical_alert(f"BOT ALERT: Manual Bybit Confirmation Needed for Order {order_no}", error_reason)
                                     for order in backend_orders:
                                         if order["bybitOrderId"] == order_no:
-                                            order["status"] = "Paystack Payment Failed, Manual Payment Needed"
+                                            order["status"] = f"Payment Sent to Seller, MANUAL CONFIRMATION NEEDED on Bybit (Reason: {error_msg[:50]}...)"
                                             break
                                     save_json_data(ORDERS_FILE, backend_orders)
+                                error_reason = f"Paystack payment to Bybit seller for order {order_no} failed. Reason: {error_msg or 'Unknown Paystack issue'}. MANUAL PAYMENT REQUIRED!"
+                                root_logger.error(f"❌ {error_reason}")
+                                send_critical_alert(f"BOT ALERT: Manual Paystack Payment Needed for Order {order_no}", error_reason)
+                                for order in backend_orders:
+                                    if order["bybitOrderId"] == order_no:
+                                        order["status"] = "Paystack Payment Failed, Manual Payment Needed"
+                                        break
+                                save_json_data(ORDERS_FILE, backend_orders)
                         else:
                             error_reason = f"Failed to get seller bank details for order {order_no} via Bybit API. Reason: {error_msg or 'Unknown API issue'}. Manual payment to seller will be required."
                             root_logger.error(f"❌ {error_reason}")
@@ -674,60 +664,20 @@ def home():
 def health_check():
     return jsonify({"status": "Backend operational"}), 200
 
-# Authentication Endpoints
-@app.route('/api/login', methods=['POST'])
-def login():
-    print("--- Login attempt received ---")
+# Authentication Endpoints (REMOVED)
+# @app.route('/api/login', methods=['POST'])
+# def login():
+#     # ... (login logic removed) ...
+#     pass # Or return a 404/method not allowed if completely removed
 
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-
-    print(f"Attempting login for username: {username}")
-
-    global ADMIN_PASSWORD_HASH, ADMIN_USERNAME
-    
-    if ADMIN_PASSWORD_HASH is None or ADMIN_PASSWORD_HASH == "":
-        print("ERROR: ADMIN_PASSWORD_HASH is None or empty during login attempt. Check Railway Environment variables!")
-        root_logger.critical("ADMIN_PASSWORD_HASH is None or empty during login attempt. Server misconfigured.")
-        return jsonify({"message": "Server configuration error: Admin password hash not loaded."}), 500
-
-    print(f"Retrieved ADMIN_PASSWORD_HASH (global var): {ADMIN_PASSWORD_HASH[:15]}..." if ADMIN_PASSWORD_HASH else "ERROR: ADMIN_PASSWORD_HASH is still None after load.")
-    print(f"Password provided (first 5 chars): {password[:5]}..." if password else "Password not provided.")
-
-    if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
-        print("Login successful for admin!")
-        session_token = str(uuid.uuid4())
-        token_expiry = datetime.now() + timedelta(hours=8)
-
-        global backend_config
-        backend_config['session_token'] = session_token
-        backend_config['token_expiry'] = token_expiry
-        save_json_data(CONFIG_FILE, backend_config)
-
-        root_logger.info(f"Admin user '{username}' logged in successfully. Token expires at {token_expiry.isoformat()}")
-        return jsonify({
-            "message": "Login successful",
-            "token": session_token,
-            "tokenExpiry": token_expiry.isoformat()
-        }), 200
-    else:
-        print("Login failed: Invalid username or password (comparison failed).")
-        root_logger.warning(f"Failed login attempt for username: {username}")
-        return jsonify({"message": "Invalid username or password"}), 401
-
-@app.route('/api/logout', methods=['POST'])
-@login_required
-def logout():
-    global backend_config
-    backend_config['session_token'] = None
-    backend_config['token_expiry'] = None
-    save_json_data(CONFIG_FILE, backend_config)
-    root_logger.info("User logged out successfully.")
-    return jsonify({"message": "Logged out successfully"}), 200
+# @app.route('/api/logout', methods=['POST'])
+# @login_required # REMOVED DECORATOR
+# def logout():
+#     # ... (logout logic removed) ...
+#     pass # Or return a 404/method not allowed if completely removed
 
 @app.route('/api/status', methods=['GET'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def get_bot_status_endpoint():
     current_config = load_json_data(CONFIG_FILE, default_data={})
     current_orders = load_json_data(ORDERS_FILE, default_data=[])
@@ -744,7 +694,7 @@ def get_bot_status_endpoint():
     })
 
 @app.route('/api/trigger-bot-run', methods=['POST'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def trigger_bot_run_endpoint():
     global backend_bot_status, bot_thread, bot_should_stop
 
@@ -768,7 +718,7 @@ def trigger_bot_run_endpoint():
     return jsonify({"message": "Bot run initiated successfully in background!"}), 200
 
 @app.route('/api/stop-bot', methods=['POST'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def stop_bot_endpoint():
     global bot_should_stop, backend_bot_status
     
@@ -787,12 +737,12 @@ def stop_bot_endpoint():
     return jsonify({"message": "Stop signal sent to bot. It will halt shortly."}), 200
 
 @app.route('/api/users', methods=['GET'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def get_users_endpoint():
     return jsonify(backend_users)
 
 @app.route('/api/orders', methods=['GET'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def get_orders_endpoint():
     serializable_orders = [
         {k: v.isoformat() if isinstance(v, datetime) else v for k, v in order.items()}
@@ -801,7 +751,7 @@ def get_orders_endpoint():
     return jsonify(serializable_orders)
 
 @app.route('/api/payments', methods=['GET'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def get_payments_endpoint():
     serializable_payments = [
         {k: v.isoformat() if isinstance(v, datetime) else v for k, v in payment.items()}
@@ -810,34 +760,39 @@ def get_payments_endpoint():
     return jsonify(serializable_payments)
 
 @app.route('/api/logs', methods=['GET'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def get_logs_endpoint():
     return jsonify(backend_logs_list)
 
 @app.route('/api/config', methods=['GET', 'POST'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def config_endpoint():
     global backend_config
 
     if request.method == 'GET':
         display_config = backend_config.copy()
-        display_config['bybitApiKey'] = display_config.get("bybitApiKey", "")[:5] + "..." if display_config.get("bybitApiKey") else ""
-        display_config['bybitApiSecret'] = display_config.get("bybitApiSecret", "")[:5] + "..." if display_config.get("bybitApiSecret") else ""
-        display_config['paystackSecretKey'] = display_config.get("paystackSecretKey", "")[:5] + "..." if display_config.get("paystackSecretKey") else ""
-        display_config['email_username'] = display_config.get("email_username", "")[:5] + "..." if display_config.get("email_username") else ""
-        display_config['email_password'] = "..." if display_config.get("email_password") else ""
-        display_config['alert_recipient_email'] = display_config.get("alert_recipient_email", "")[:5] + "..." if display_config.get("alert_recipient_email") else ""
+        # No longer masking keys, as authentication is removed.
+        # This means raw keys can be fetched by anyone.
+        # display_config['bybitApiKey'] = display_config.get("bybitApiKey", "")[:5] + "..." if display_config.get("bybitApiKey") else ""
+        # display_config['bybitApiSecret'] = display_config.get("bybitApiSecret", "")[:5] + "..." if display_config.get("bybitApiSecret") else ""
+        # display_config['paystackSecretKey'] = display_config.get("paystackSecretKey", "")[:5] + "..." if display_config.get("paystackSecretKey") else ""
+        # display_config['email_username'] = display_config.get("email_username", "")[:5] + "..." if display_config.get("email_username") else ""
+        # display_config['email_password'] = "..." if display_config.get("email_password") else ""
+        # display_config['alert_recipient_email'] = display_config.get("alert_recipient_email", "")[:5] + "..." if display_config.get("alert_recipient_email") else ""
         
+        # Ensure datetimes are serialized for frontend
         if 'lastRunTime' in display_config and isinstance(display_config['lastRunTime'], datetime):
             display_config['lastRunTime'] = display_config['lastRunTime'].isoformat()
-        if 'token_expiry' in display_config and isinstance(display_config['token_expiry'], datetime):
-            display_config['token_expiry'] = display_config['token_expiry'].isoformat()
+        # 'token_expiry' is no longer in backend_config if login is removed
+        # if 'token_expiry' in display_config and isinstance(display_config['token_expiry'], datetime):
+        #     display_config['token_expiry'] = display_config['token_expiry'].isoformat()
 
         return jsonify(display_config)
     
     elif request.method == 'POST':
         data = request.get_json()
         
+        # Keys are now updated directly from frontend input without masking logic
         if data.get('bybitApiKey'): backend_config['bybitApiKey'] = data.get('bybitApiKey')
         if data.get('bybitApiSecret'): backend_config['bybitApiSecret'] = data.get('bybitApiSecret')
         if data.get('paystackSecretKey'): backend_config['paystackSecretKey'] = data.get('paystackSecretKey')
@@ -855,42 +810,52 @@ def config_endpoint():
         return jsonify({"message": "Configuration updated and saved."}), 200
 
 @app.route('/api/add-client', methods=['POST'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def add_client_endpoint():
     global backend_users
     data = request.get_json()
     if not all(k in data and data[k] is not None for k in ['name', 'account', 'bank', 'amount']):
         root_logger.warning("Attempted to add client with missing or invalid data.")
-        return jsonify({"message": "Missing or invalid client data (requires name, account, bank, amount)"}), 400
-    
-    new_id = f"user_{len(backend_users) + 1}_{int(time.time())}"
-    new_client = {
-        "id": new_id,
-        "name": data['name'],
-        "account": data['account'],
-        "bank": data['bank'],
-        "amount": float(data['amount'])
-    }
-    backend_users.append(new_client)
-    save_json_data(USERS_FILE, backend_users)
-    root_logger.info(f"Client '{new_client['name']}' added and saved to users.json.")
-    return jsonify({"message": "Client added successfully", "client": new_client}), 201
+        return jsonify({"message": "Missing or invalid client data (requires name, account, bank, amount)"}), 400 # Added 400 status
+
+    try:
+        new_client = {
+            "id": str(uuid.uuid4()), # Generate a unique ID for the new client
+            "name": data['name'],
+            "account": data['account'],
+            "bank": data['bank'],
+            "amount": float(data['amount'])
+        }
+        backend_users.append(new_client)
+        save_json_data(USERS_FILE, backend_users)
+        root_logger.info(f"Client '{new_client['name']}' added successfully.")
+        return jsonify({"message": "Client added successfully!", "client": new_client}), 201
+    except ValueError:
+        root_logger.warning("Attempted to add client with invalid amount format.")
+        return jsonify({"message": "Invalid amount format. Please provide a number."}), 400
+    except Exception as e:
+        root_logger.error(f"Error adding client: {e}")
+        return jsonify({"message": "Failed to add client due to an internal error."}), 500
 
 @app.route('/api/remove-client/<string:client_id>', methods=['DELETE'])
-@login_required
+# @login_required # REMOVED DECORATOR
 def remove_client_endpoint(client_id):
     global backend_users
     initial_len = len(backend_users)
-    backend_users = [user for user in backend_users if user['id'] != client_id]
+    backend_users[:] = [user for user in backend_users if user['id'] != client_id]
+    
     if len(backend_users) < initial_len:
         save_json_data(USERS_FILE, backend_users)
-        root_logger.info(f"Client '{client_id}' removed and saved to users.json.")
-        return jsonify({"message": "Client removed successfully"}), 200
+        root_logger.info(f"Client {client_id} removed successfully.")
+        return jsonify({"message": f"Client {client_id} removed successfully."}), 200
     else:
-        root_logger.warning(f"Attempted to remove non-existent client with ID: {client_id}.")
-        return jsonify({"message": "Client not found"}), 404
+        root_logger.warning(f"Attempted to remove client {client_id} but not found.")
+        return jsonify({"message": f"Client {client_id} not found."}), 404
 
-# --- Main entry point for the Flask app ---
-if __name__ == '__main__':
-    root_logger.info("Starting Flask P2P Bot Backend...")
-    app.run(debug=True, host='0.0.0.0', port=os.environ.get('PORT', 5000), use_reloader=False)
+# If __name__ == "__main__": should remain at the very end of the file
+if __name__ == "__main__":
+    # This block is for local development execution
+    # In Railway, Gunicorn/production server typically handles running the app
+    root_logger.info("Starting Flask app in development mode.")
+    app.run(debug=True, host='0.0.0.0', port=5000)
+

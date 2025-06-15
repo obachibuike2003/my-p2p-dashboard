@@ -3,6 +3,7 @@ import Card from './components/card'; // Note the lowercase 'c' for 'card'
 
 // Define the API_BASE_URL using the environment variable at the top level
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 const Settings = () => {
   const [config, setConfig] = useState({
     bybitApiKey: '',
@@ -18,29 +19,31 @@ const Settings = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  // Removed onLogout prop from function signature if it were ever passed
+
   const fetchConfig = useCallback(async () => {
     setLoading(true);
     setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Authentication token missing. Please log in again.');
-      setLoading(false);
-      return;
-    }
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   setError('Authentication token missing. Please log in again.');
+    //   setLoading(false);
+    //   return;
+    // }
 
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL and corrected endpoint for config ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/config`, { // Changed from /api/status
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        // Removed headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
         setConfig(data); // Assuming 'data' directly contains the config object
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to fetch configuration.');
+        // Updated error message to reflect no login
+        setError(errorData.message || 'Failed to fetch configuration (no authentication required).');
       }
     } catch (err) {
       console.error('Error fetching config:', err);
@@ -48,7 +51,7 @@ const Settings = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Dependency array changed, token removed
 
   useEffect(() => {
     fetchConfig();
@@ -66,19 +69,20 @@ const Settings = () => {
     e.preventDefault();
     setMessage('');
     setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Authentication token missing. Please log in again.');
-      return;
-    }
+    // Removed authentication token check
+    // const token = localStorage.getItem('token');
+    // if (!token) {
+    //   setError('Authentication token missing. Please log in again.');
+    //   return;
+    // }
 
     try {
-      // *** MODIFIED LINE HERE: Using API_BASE_URL for saving config ***
+      // API call no longer requires Authorization header
       const response = await fetch(`${API_BASE_URL}/api/config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          // Removed 'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(config),
       });
@@ -93,7 +97,6 @@ const Settings = () => {
     } catch (err) {
       console.error('Error saving config:', err);
       setError('Network error or server unreachable. Could not save configuration.');
-    
     }
   };
 
