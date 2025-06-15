@@ -3,7 +3,7 @@ import Card from './components/card'; // Use the new Card component
 
 // Define the API_BASE_URL using the environment variable at the top level
 // This is crucial for both local development and deployed environments.
-const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 const Clients = () => {
   const [clients, setClients] = useState([]);

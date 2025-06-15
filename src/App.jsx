@@ -3,7 +3,7 @@ import './index.css'; // Global CSS for main layout
 
 // Define the API_BASE_URL using the environment variable at the top level
 // This is the correct way for Vite. If using Create React App, it's process.env.REACT_APP_BACKEND_URL
-const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 
 // Dynamically import page components

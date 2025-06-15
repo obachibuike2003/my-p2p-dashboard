@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Card from './components/card'; // Note the lowercase 'c' for 'card'
 
 // Define the API_BASE_URL using the environment variable at the top level
-const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const Settings = () => {
   const [config, setConfig] = useState({
     bybitApiKey: '',

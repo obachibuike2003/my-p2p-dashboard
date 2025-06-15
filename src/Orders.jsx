@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Card from './components/card'; // Use the new Card component
 
 // Define the API_BASE_URL using the environment variable at the top level
-const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
